@@ -3,10 +3,7 @@ NAMESPACE		?= kesha123
 REPOSITORY		?= caddy-route53
 OCI_IMAGE		?= $(OCI_REGISTRY)/$(NAMESPACE)/$(REPOSITORY)
 
-BUILD_TAG_MAJOR		:= 0
-BUILD_TAG_MINOR		:= 0
-BUILD_TAG_PATCH		:= 0
-BUILD_TAG			?= v$(BUILD_TAG_MAJOR).$(BUILD_TAG_MINOR).$(BUILD_TAG_PATCH)
+BUILD_TAG			?= latest
 
 PLATFORM	?= linux/amd64
 
@@ -14,16 +11,22 @@ DOCKER ?= docker
 DOCKER_BUILD := $(DOCKER) buildx build
 
 
-.PHONY: build publish
+.PHONY: build publish publish-assemble
 
 build:
 	$(DOCKER_BUILD) \
 		--platform $(PLATFORM) \
 		-t $(OCI_IMAGE):$(BUILD_TAG) \
 		-t $(OCI_IMAGE):latest \
-		-f Containerfile \
+		-f Dockerfile \
 		.
 
 publish:
 	$(DOCKER) push $(OCI_IMAGE):$(BUILD_TAG)
-	$(DOCKER) push $(OCI_IMAGE):latest
+
+publish-assemble:
+	$(DOCKER) buildx imagetools create \
+		-t $(OCI_IMAGE):$(BUILD_TAG) \
+		-t $(OCI_IMAGE):latest \
+		$(OCI_IMAGE):$(BUILD_TAG)-amd64 \
+		$(OCI_IMAGE):$(BUILD_TAG)-arm64
