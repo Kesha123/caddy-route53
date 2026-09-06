@@ -3,7 +3,9 @@ NAMESPACE		?= kesha123
 REPOSITORY		?= caddy-route53
 OCI_IMAGE		?= $(OCI_REGISTRY)/$(NAMESPACE)/$(REPOSITORY)
 
-BUILD_TAG			?= latest
+CADDY_VERSION	:= $(shell awk '/^FROM/ && $$2 ~ /caddy:/ { n=split($$2,a,":"); v=a[n] } END { print v }' Dockerfile)
+
+BUILD_TAG			?= $(CADDY_VERSION)
 
 PLATFORM	?= linux/amd64
 
