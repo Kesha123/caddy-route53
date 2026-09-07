@@ -2,17 +2,7 @@ name: publish
 
 on:
   workflow_call:
-    inputs:
-      tag:
-        description: Image tag
-        type: string
-        default: latest
   workflow_dispatch:
-    inputs:
-      tag:
-        description: Image tag
-        type: string
-        default: latest
 
 permissions:
   packages: write
@@ -29,9 +19,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Determine tag
+        id: tag
+        run: echo "tag=$(scripts/caddy-version 2>/dev/null || echo latest)" >> "$GITHUB_OUTPUT"
+
       - name: Assemble multi-arch manifest
         run: |
           owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           make publish-assemble \
             NAMESPACE="$owner" \
-            BUILD_TAG=${{ inputs.tag }}
+            BUILD_TAG=${{ steps.tag.outputs.tag }}
