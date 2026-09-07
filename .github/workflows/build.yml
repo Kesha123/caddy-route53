@@ -3,16 +3,18 @@ name: build
 on:
   workflow_call:
     inputs:
-      tag:
-        description: Image tag
+      suffix:
+        description: Tag suffix (e.g. pr)
         type: string
-        default: latest
+        default: ''
+        required: false
   workflow_dispatch:
     inputs:
-      tag:
-        description: Image tag
+      suffix:
+        description: Tag suffix (e.g. pr)
         type: string
-        default: latest
+        default: ''
+        required: false
 
 permissions:
   packages: write
@@ -36,12 +38,19 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Determine tag
+        id: tag
+        run: |
+          version="$(scripts/caddy-version 2>/dev/null || echo latest)"
+          if [ -n "${{ inputs.suffix }}" ]; then tag="${version}-${{ inputs.suffix }}"; else tag="$version"; fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
       - name: Build
         run: |
           owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           make build \
             NAMESPACE="$owner" \
-            BUILD_TAG=${{ inputs.tag }}-${{ matrix.arch }} \
+            BUILD_TAG=${{ steps.tag.outputs.tag }}-${{ matrix.arch }} \
             PLATFORM=linux/${{ matrix.arch }}
 
       - name: Publish
@@ -49,4 +58,4 @@ jobs:
           owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           make publish \
             NAMESPACE="$owner" \
-            BUILD_TAG=${{ inputs.tag }}-${{ matrix.arch }}
+            BUILD_TAG=${{ steps.tag.outputs.tag }}-${{ matrix.arch }}

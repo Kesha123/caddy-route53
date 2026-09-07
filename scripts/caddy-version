@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+dockerfile="$(dirname "$0")/../Dockerfile"
+version="$(awk '/^FROM/ && $2 ~ /caddy:/ { n=split($2,a,":"); v=a[n] } END { print v }' "$dockerfile")"
+
+echo "${version:-latest}"
