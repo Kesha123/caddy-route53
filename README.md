@@ -8,7 +8,7 @@ An OCI container image of [Caddy](https://caddyserver.com) with the [Route53 DNS
 make build
 ```
 
-Overrides: `PLATFORM` (default `linux/amd64`), `OCI_IMAGE`, `BUILD_TAG` (default `v0.0.0`).
+Overrides: `PLATFORM` (default `linux/amd64`), `OCI_IMAGE`, `BUILD_TAG` (default `0.0.0`).
 
 ## Publish
 
