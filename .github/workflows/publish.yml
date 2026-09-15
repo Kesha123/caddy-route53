@@ -40,5 +40,9 @@ jobs:
         run: |
           owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           image="ghcr.io/$owner/caddy-route53"
-          digest="$(docker buildx imagetools inspect "$image:$TAG" --format '{{json .Manifest.Digest}}' | tr -d '"')"
-          cosign sign --yes "$image@$digest"
+          subjects=""
+          for t in "$TAG" "$TAG-amd64" "$TAG-arm64"; do
+            digest="$(docker buildx imagetools inspect "$image:$t" --format '{{json .Manifest.Digest}}' | tr -d '"')"
+            subjects="$subjects $image@$digest"
+          done
+          cosign sign --yes $subjects
