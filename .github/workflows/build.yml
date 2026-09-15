@@ -32,30 +32,38 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - name: Determine tags
+        id: tag
+        run: |
+          version="$(scripts/caddy-version 2>/dev/null || echo latest)"
+          if [ -n "${{ inputs.suffix }}" ]; then tag="${version}-${{ inputs.suffix }}"; else tag="$version"; fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+          echo "created=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+
       - uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Determine tag
-        id: tag
-        run: |
-          version="$(scripts/caddy-version 2>/dev/null || echo latest)"
-          if [ -n "${{ inputs.suffix }}" ]; then tag="${version}-${{ inputs.suffix }}"; else tag="$version"; fi
-          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+      - name: Set up buildx builder
+        run: docker buildx create --name ci --driver docker-container --bootstrap --use
 
       - name: Build
         run: |
-          owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           make build \
-            NAMESPACE="$owner" \
+            NAMESPACE=${{ steps.tag.outputs.owner }} \
             BUILD_TAG=${{ steps.tag.outputs.tag }}-${{ matrix.arch }} \
+            CREATED=${{ steps.tag.outputs.created }} \
+            REVISION=${{ github.sha }} \
             PLATFORM=linux/${{ matrix.arch }}
 
       - name: Publish
         run: |
-          owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           make publish \
-            NAMESPACE="$owner" \
-            BUILD_TAG=${{ steps.tag.outputs.tag }}-${{ matrix.arch }}
+            NAMESPACE=${{ steps.tag.outputs.owner }} \
+            BUILD_TAG=${{ steps.tag.outputs.tag }}-${{ matrix.arch }} \
+            CREATED=${{ steps.tag.outputs.created }} \
+            REVISION=${{ github.sha }} \
+            PLATFORM=linux/${{ matrix.arch }}

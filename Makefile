@@ -19,6 +19,7 @@ REVISION	?=
 
 build:
 	$(DOCKER) buildx build \
+		--load \
 		--platform $(PLATFORM) \
 		--build-arg CREATED="$(CREATED)" \
 		--build-arg REVISION="$(REVISION)" \
@@ -29,7 +30,16 @@ build:
 		.
 
 publish:
-	$(DOCKER) push $(OCI_IMAGE):$(BUILD_TAG)
+	$(DOCKER) buildx build \
+		--push \
+		--platform $(PLATFORM) \
+		--build-arg CREATED="$(CREATED)" \
+		--build-arg REVISION="$(REVISION)" \
+		--build-arg VERSION="$(CADDY_VERSION)" \
+		--sbom=true --provenance=mode=max \
+		-t $(OCI_IMAGE):$(BUILD_TAG) \
+		-f Dockerfile \
+		.
 
 publish-assemble:
 	$(DOCKER) buildx imagetools create \
