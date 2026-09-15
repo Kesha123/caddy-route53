@@ -18,6 +18,7 @@ on:
 
 permissions:
   packages: write
+  security-events: write
 
 jobs:
   build:
@@ -58,6 +59,21 @@ jobs:
             CREATED=${{ steps.tag.outputs.created }} \
             REVISION=${{ github.sha }} \
             PLATFORM=linux/${{ matrix.arch }}
+
+      - name: Scan image (report only)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: image
+          image-ref: ghcr.io/${{ steps.tag.outputs.owner }}/caddy-route53:${{ steps.tag.outputs.tag }}-${{ matrix.arch }}
+          format: sarif
+          output: trivy-results.sarif
+          severity: CRITICAL,HIGH
+
+      - name: Upload scan results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-results.sarif
 
       - name: Publish
         run: |
