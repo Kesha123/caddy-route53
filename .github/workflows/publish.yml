@@ -6,6 +6,7 @@ on:
 
 permissions:
   packages: write
+  id-token: write
 
 jobs:
   publish:
@@ -29,3 +30,15 @@ jobs:
           make publish-assemble \
             NAMESPACE="$owner" \
             BUILD_TAG=${{ steps.tag.outputs.tag }}
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Sign image
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          image="ghcr.io/$owner/caddy-route53"
+          digest="$(docker buildx imagetools inspect "$image:$TAG" --format '{{json .Manifest.Digest}}' | tr -d '"')"
+          cosign sign --yes "$image@$digest"
