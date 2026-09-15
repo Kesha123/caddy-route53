@@ -37,7 +37,7 @@ jobs:
         id: tag
         run: |
           version="$(scripts/caddy-version 2>/dev/null || echo latest)"
-          if [ -n "${{ inputs.suffix }}" ]; then tag="${version}-${{ inputs.suffix }}"; else tag="$version"; fi
+          if [ -n "${{ inputs.suffix }}" ]; then tag="${version}-${{ inputs.suffix }}${{ github.event.number }}"; else tag="$version"; fi
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
           echo "owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
           echo "created=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
