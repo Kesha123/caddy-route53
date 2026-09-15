@@ -43,6 +43,9 @@ publish:
 
 publish-assemble:
 	$(DOCKER) buildx imagetools create \
+		--annotation org.opencontainers.image.description="Caddy with the Route53 DNS plugin" \
+		--annotation org.opencontainers.image.source=https://github.com/Kesha123/caddy-route53 \
+		--annotation org.opencontainers.image.version=$(BUILD_TAG) \
 		-t $(OCI_IMAGE):$(BUILD_TAG) \
 		-t $(OCI_IMAGE):latest \
 		$(OCI_IMAGE):$(BUILD_TAG)-amd64 \
