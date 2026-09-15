@@ -9,7 +9,10 @@ BUILD_TAG	?= $(CADDY_VERSION)
 
 PLATFORM	?= linux/amd64
 
-DOCKER	?= docker
+DOCKER		?= docker
+
+CREATED		?=
+REVISION	?=
 
 
 .PHONY: build publish publish-assemble
@@ -17,6 +20,9 @@ DOCKER	?= docker
 build:
 	$(DOCKER) buildx build \
 		--platform $(PLATFORM) \
+		--build-arg CREATED="$(CREATED)" \
+		--build-arg REVISION="$(REVISION)" \
+		--build-arg VERSION="$(CADDY_VERSION)" \
 		-t $(OCI_IMAGE):$(BUILD_TAG) \
 		-t $(OCI_IMAGE):latest \
 		-f Dockerfile \
